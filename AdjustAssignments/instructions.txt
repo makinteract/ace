@@ -1,0 +1,27 @@
+CHI 2022 Assignment Adjuster
+
+1. Download the committee bids ("as a spreadsheet" link)
+
+2. Open the downloaded file in a program such as Excel, and save as a tab-delimited file called PCS-bids.txt
+
+3. Install the Processing environment (processing.org)
+
+4. Unzip file AdjustAssignments-210920c.zip to a directory
+
+5. Put your file PCS-bids.txt into the AdjustAssignments folder
+
+6. Run AdjustAssignments.pde from the AdjustAssignments folder
+
+7. You should see a window with your ACs and your papers (similar to the video)
+
+8. Whenever you drag a paper to a new AC, the system will create a file "temp-assignments.csv"
+
+9. Pressing the 's' key will create a file "assignments.csv"
+
+10. If you close the program and re-open later, it will read the assignments.csv file and use these for what is shown
+
+11. The system will refuse to drag a paper to an AC who is already 1AC or 2AC for that paper
+
+12. There are many usability issues (and likely many bugs) still in the program. Press 's' frequently to make sure you save your progress
+
+13. If you have questions, contact me through the chairs' slack or at gutwin@cs.usask.ca
