@@ -11,7 +11,8 @@ class Paper {
   float left2, top2, right2, bottom2;
 
   public Paper(String id, String title) {
-    paperID = id.substring(6, id.length());
+    
+    paperID = id.substring(2, id.length());
     paperTitle = title;
     wanters = new ArrayList<AC>();
     willingers = new ArrayList<AC>();
