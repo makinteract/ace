@@ -1,3 +1,5 @@
+import java.io.*;
+
 ArrayList<AC> people;
 ArrayList<Paper> papers;
 float yStep, xStep;
@@ -16,7 +18,29 @@ int maxLoad;
 int primaryCount = 0;
 int secondaryCount = 0;
 
+PrintStream o, console;
+
+void printRow(TableRow row) {
+  for (int i = 0; i < row.getColumnCount(); i++) {
+      if (i > 0) print(", "); // separator
+      print(row.getString(i));
+    }
+    println(); // end of row
+}
+
 void setup() {
+  console = System.out;
+   try {
+    o = new PrintStream(sketchPath("") + new File("debug.log")); 
+  }
+  catch(Exception e) {
+    System.err.println("Unable to create file output stream");
+  }
+  
+  // Set to System.setOut(o) instead of System.setOut(console) 
+  // to write to debug.log file;
+  System.setOut(console);
+  
   //fullScreen();
   //size(2500, 1300);
   size(1920, 1080);
@@ -24,47 +48,50 @@ void setup() {
   papers = new ArrayList<Paper>();
   matches = new HashMap<String, String>();
 
-  String[] lines = loadStrings("PCS-bids.txt");
   //String[] lines = loadStrings("assignments.csv");
-  println("there are " + lines.length + " lines");
-
+  
+  Table table;
+  table = loadTable("PCS-bids.csv", "csv");
+  println(table.getRowCount() + " total rows in the table.");
+  
   // Make ACs
   String[] parts;
   String name;
   int i;
   boolean starred;
   AC person;
-  for (i = 2; i < lines.length; i++) {
-    parts = lines[i].split("\t");
-    if (parts.length > 1) {
-      name = parts[parts.length-1];
-      //println(name);
-      starred = false;
-      //if (name.charAt(name.length()-1) == '*') {
-      if (name.indexOf("*") != -1) {
+  
+  // The format of the initial rows are:
+  // ID, Title, Person 1, Person 1, Person 1, Person 2, Person 2, Person 2
+  //   ,      , bid     , stat    , match   , bid,    , stat    , match
+  //
+  TableRow peopleRow = table.getRow(2);
+  for (i = 2; i < peopleRow.getColumnCount(); i = i + 3) {
+   
+   // Example field:
+   // Person 1\n
+   // 6 P, 7 S, 0 V
+   parts = peopleRow.getString(i).split("\n");
+   name = parts[0];
+   
+   starred = false;
+   if (name.indexOf("*") != -1) {
         starred = true;
         println("Starred: " + name);
-      }
-      name = name.substring(1, name.length());
-      //AC lastPerson = people.get(people.size());
-      //println("lastPerson: " + lastPerson.name);
-      if (people.size() == 0 || !(people.get(people.size()-1).name.equals(name))) {
-        person = new AC(name);
-        person.notOnSC = starred;
-        people.add(person);
-        println("Added: " + person.name + "," + person.notOnSC);
-      }
-    } else {
-      break;
-    }
+   }
+   
+   person = new AC(name);
+   person.notOnSC = starred;
+   people.add(person);
+   println("Added: " + person.name + "," + person.notOnSC);
+  }
+  
+  // Read paper lines (which start at row position 5)
+  for (int r = 5; r < table.getRowCount(); r++) {
+    TableRow row = table.getRow(r);
+    setDetails(row);
   }
 
-  // read papers lines
-  i += 3;
-  for (int j = i; j < lines.length; j++) {
-    //println(i + "        " + lines[i]);
-    setDetails(lines[j]);
-  }
   println("There are " + papers.size() + " papers ************************************************");
   println("There are " + primaryCount + " papers with 1AC ************************************************");
   println("There are " + secondaryCount + " papers with 2AC ************************************************");
@@ -367,13 +394,12 @@ void makeACs(String line) {
   }
 }
 
-void setDetails(String line) {
+void setDetails(TableRow row) {
   boolean acAssigned = false;
-  String[] parts = split(line, "\t");
 
-  String id = parts[0];
+  String id = row.getString(0);
   println("===>", id);
-  String title = parts[1];
+  String title = row.getString(1);
   Paper thisPaper = new Paper(id, title);
   String numberID = id.substring(6, id.length());
   println(numberID);
@@ -391,14 +417,14 @@ void setDetails(String line) {
   int index;
   int personIndex;
   AC person;
-  for (int i = 2; i < parts.length; i+=3) {
+  for (int i = 2; i < row.getColumnCount(); i+=3) {
     index = i;
     personIndex = int((i-2)/3);
     if (personIndex >= people.size()) {
       break;
     }
     person = people.get(personIndex);
-    String bid = parts[index];
+    String bid = row.getString(index);
     if (bid.equals("C")) {
       person.conflict.add(thisPaper);
     }
@@ -420,7 +446,7 @@ void setDetails(String line) {
     }
 
     index++;
-    String stat = parts[index];
+    String stat = row.getString(index);
     if (stat.equals("1AC")) {
       person.primary.add(thisPaper);
       person.originalPrimary.add(thisPaper);
@@ -434,7 +460,7 @@ void setDetails(String line) {
     }
 
     index++;
-    String match = parts[index];
+    String match = row.getString(index);
     String tag = person.name + "|" + thisPaper.paperID;
     matches.put(tag, match);
   }
